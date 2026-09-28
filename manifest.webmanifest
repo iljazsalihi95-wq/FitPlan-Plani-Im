@@ -1,0 +1,11 @@
+{
+  "name": "FitPlan – Plani im",
+  "short_name": "FitPlan",
+  "start_url": "./index.html#home",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#07111f",
+  "theme_color": "#07111f",
+  "lang": "sq",
+  "description": "Plan personal për shëndet, dietë, ushtrime, progres dhe kujtesa."
+}
