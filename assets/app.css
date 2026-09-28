@@ -41,3 +41,25 @@ body{background:linear-gradient(180deg,#fff8fb 0,#fff 42%,#f7fbf7 100%);color:#1
 .photoActions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:18px}
 .photoUpload{display:inline-flex;align-items:center;justify-content:center;cursor:pointer;background:#fff;color:#d9437c;border:1px solid #f2b6cd;border-radius:15px;padding:11px 14px;font-weight:900;box-shadow:0 7px 20px #8b405318}
 .photoRemove{background:#fff;border:1px solid #eadde2;color:#6e7772;border-radius:15px;padding:11px 14px;font-weight:800}
+
+/* Gender-aware premium theme + profile contrast */
+:root{--accent:#ef4d88;--accent2:#ff79ab;--soft:#fff1f7;--ink:#173f31;--ring:#f2b6cd}
+html[data-theme="male"]{--accent:#2477e8;--accent2:#54b7ff;--soft:#edf7ff;--ink:#103d62;--ring:#9bd1ff}
+html[data-theme="female"]{--accent:#ef4d88;--accent2:#ff79ab;--soft:#fff1f7;--ink:#173f31;--ring:#f2b6cd}
+body{color:var(--ink)}
+.hero{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff!important;border:0;box-shadow:0 18px 42px color-mix(in srgb,var(--accent) 25%,transparent)}
+.hero h1,.hero .muted{color:#fff!important;text-shadow:0 1px 2px #0002}
+.card{background:#fff!important;color:#173b31!important;border:1px solid #e7eaeb!important;box-shadow:0 12px 34px #29435a14}
+.card label{display:block;color:#27483c!important;font-weight:850;margin:12px 0 7px}
+.card input,.card select,.card textarea{background:#f8fbfd!important;color:#102b3a!important;border:1.5px solid #cbd8df!important;box-shadow:inset 0 1px 2px #00000008}
+.card input:focus,.card select:focus,.card textarea:focus{outline:none!important;border-color:var(--accent)!important;box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 16%,transparent)!important}
+.card .muted{color:#687b73!important}
+.primary,.pinkTag,.startBtn{background:linear-gradient(135deg,var(--accent),var(--accent2))!important;color:#fff!important}
+.brandSub,.menu button.active,.photoUpload{color:var(--accent)!important}
+.profilePill{border-color:var(--ring)!important;color:var(--ink)!important}
+html[data-theme="male"] body{background:linear-gradient(180deg,#f3f9ff 0,#fff 42%,#eef7ff 100%)}
+html[data-theme="male"] .brandRow{background:linear-gradient(90deg,#fff,#f1f8ff)}
+html[data-theme="male"] .welcomeCard{background:radial-gradient(circle at 82% 18%,#d8efff 0 13%,transparent 34%),linear-gradient(135deg,#fff 0,#f3f9ff 52%,#eaf5ff 100%)}
+html[data-theme="male"] .pinkTag{box-shadow:0 8px 24px #2477e835}
+html[data-theme="male"] .menu{border-top-color:#dcecff}
+html[data-theme="male"] .premiumTile{border-color:#dcecf8}
