@@ -35,3 +35,9 @@ body{background:linear-gradient(180deg,#fff8fb 0,#fff 42%,#f7fbf7 100%);color:#1
 .card,.hero{color:#f7fbff}
 @media(max-width:620px){.welcomeCard{min-height:330px;padding:23px 20px}.welcomeText h1{font-size:35px}.welcomeText p{font-size:16px}.premiumGrid{grid-template-columns:1fr 1fr}.premiumTile{display:block;text-align:center}.premiumTile img{width:76px;height:76px;margin-bottom:7px}.brandName{font-size:27px}.brandLogo{width:52px;height:52px}}
 @media(max-width:390px){.premiumGrid{gap:8px}.premiumTile{padding:8px}.premiumTile img{width:68px;height:68px}.profilePill{padding:9px 11px}}
+
+.welcomeCard.hasPersonalPhoto{background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
+.welcomeCard.hasPersonalPhoto:after{display:none}
+.photoActions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:18px}
+.photoUpload{display:inline-flex;align-items:center;justify-content:center;cursor:pointer;background:#fff;color:#d9437c;border:1px solid #f2b6cd;border-radius:15px;padding:11px 14px;font-weight:900;box-shadow:0 7px 20px #8b405318}
+.photoRemove{background:#fff;border:1px solid #eadde2;color:#6e7772;border-radius:15px;padding:11px 14px;font-weight:800}
