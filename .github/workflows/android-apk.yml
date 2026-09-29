@@ -1,5 +1,5 @@
 name: Build FitPlan Android APK
-# FitPlan MASTER API + Bluetooth scale + Health Connect activity bridge
+# Native SENSSUN BLE bridge + Health Connect + MASTER API
 on:
   workflow_dispatch:
   push:
