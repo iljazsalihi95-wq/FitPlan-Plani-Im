@@ -1,4 +1,5 @@
 name: Build FitPlan Android APK
+# FitPlan MASTER API connected; APK loads the live Netlify PWA
 on:
   workflow_dispatch:
   push:
