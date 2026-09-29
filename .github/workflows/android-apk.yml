@@ -19,7 +19,15 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - run: gradle assembleDebug
+      - name: Generate Android launcher icons from FitPlan logo
+        run: |
+          set -e
+          for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            mkdir -p app/src/main/res/mipmap-$d
+            base64 -d app/src/main/fitplan_icon.b64 > app/src/main/res/mipmap-$d/ic_launcher.jpg
+            cp app/src/main/res/mipmap-$d/ic_launcher.jpg app/src/main/res/mipmap-$d/ic_launcher_round.jpg
+          done
+      - run: gradle clean assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: FitPlan-debug-apk
