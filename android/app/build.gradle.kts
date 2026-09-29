@@ -2,7 +2,7 @@ plugins { id("com.android.application"); id("org.jetbrains.kotlin.android") }
 
 android {
     namespace = "com.fitplan.planiim"
-    compileSdk = 35
+    compileSdk = 36
     defaultConfig {
         applicationId = "com.fitplan.planiim"
         minSdk = 26
