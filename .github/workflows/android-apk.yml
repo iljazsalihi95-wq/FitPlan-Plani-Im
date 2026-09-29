@@ -1,5 +1,5 @@
 name: Build FitPlan Android APK
-# FitPlan MASTER API connected; APK loads the live Netlify PWA
+# FitPlan MASTER API + Bluetooth scale + Health Connect activity bridge
 on:
   workflow_dispatch:
   push:
