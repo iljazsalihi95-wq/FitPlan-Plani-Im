@@ -7,7 +7,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation"/>
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false"/>
-    <application android:theme="@style/Theme.FitPlan" android:label="FitPlan • Plani im" android:usesCleartextTraffic="false">
+    <application android:theme="@style/Theme.FitPlan" android:label="FitPlan • Plani im" android:icon="@drawable/fitplan_logo" android:roundIcon="@drawable/fitplan_logo" android:usesCleartextTraffic="false">
         <activity android:name=".MainActivity" android:screenOrientation="portrait" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/>
