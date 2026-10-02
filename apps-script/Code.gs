@@ -53,7 +53,8 @@ function doPost(e){
       case "saveReminder": return FP_OK_({saved:FP_APPEND_("Reminders",d)});
       case "saveDailySummary": return FP_OK_({saved:FP_APPEND_("Daily_Summary",d)});
       case "dashboard": return FP_OK_({dashboard:FP_DASHBOARD_(FP_ID_(d))});
-      case "premiumStatus": return FP_OK_({premium:FP_PREMIUM_STATUS_(FP_ID_(d))});
+      case "premiumStatus": return FP_OK_({premium:FP_PREMIUM_STATUS_(FP_ID_(d)),paypal:FP_PAYPAL_CONFIG_()});
+      case "paypalConfig": return FP_OK_({paypal:FP_PAYPAL_CONFIG_()});
       case "paypalCreateSubscription": return FP_OK_(FP_PAYPAL_CREATE_SUBSCRIPTION_(d));
       case "paypalVerifySubscription": return FP_OK_(FP_PAYPAL_VERIFY_SUBSCRIPTION_(d));
       case "paypalCancelSubscription": return FP_OK_(FP_PAYPAL_CANCEL_SUBSCRIPTION_(d));
@@ -260,7 +261,17 @@ function FP_AI_MEAL_(d){
  PREMIUM_TRIAL_DAYS=14
 */
 function FP_PROP_(k){return PropertiesService.getScriptProperties().getProperty(k)||"";}
-function FP_PAYPAL_BASE_(){return FP_PROP_("PAYPAL_MODE")==="live"?"https://api-m.paypal.com":"https://api-m.sandbox.paypal.com";}
+function FP_PAYPAL_MODE_(){return String(FP_PROP_("PAYPAL_MODE")||"sandbox").toLowerCase();}
+function FP_PAYPAL_BASE_(){return FP_PAYPAL_MODE_()==="live"?"https://api-m.paypal.com":"https://api-m.sandbox.paypal.com";}
+function FP_PAYPAL_CONFIG_(){
+  return {
+    mode:FP_PAYPAL_MODE_(),
+    configured:!!(FP_PROP_("PAYPAL_CLIENT_ID")&&FP_PROP_("PAYPAL_CLIENT_SECRET")),
+    monthly_plan:!!FP_PROP_("PAYPAL_PLAN_MONTHLY"),
+    yearly_plan:!!FP_PROP_("PAYPAL_PLAN_YEARLY"),
+    trial_days:Math.max(0,Number(FP_PROP_("PREMIUM_TRIAL_DAYS")||14))
+  };
+}
 function FP_PAYPAL_TOKEN_(){
   var id=FP_PROP_("PAYPAL_CLIENT_ID"),sec=FP_PROP_("PAYPAL_CLIENT_SECRET");
   if(!id||!sec) throw new Error("PayPal API credentials mungojnë në Script Properties");
@@ -295,6 +306,7 @@ function FP_PREMIUM_STATUS_(pid){
 }
 function FP_PAYPAL_CREATE_SUBSCRIPTION_(d){
   var pid=FP_ID_(d);if(!pid)throw new Error("Mungon profile_id");
+  var cfg=FP_PAYPAL_CONFIG_();if(!cfg.configured)throw new Error("PayPal Sandbox nuk është konfiguruar plotësisht");
   var plan=String(d.plan||"monthly").toLowerCase(),planId=plan==="yearly"?FP_PROP_("PAYPAL_PLAN_YEARLY"):FP_PROP_("PAYPAL_PLAN_MONTHLY");
   if(!planId)throw new Error("PayPal Plan ID mungon për "+plan);
   var sub=FP_PAYPAL_("/v1/billing/subscriptions","post",{plan_id:planId,custom_id:pid,application_context:{brand_name:"FitPlan - Plani im",user_action:"SUBSCRIBE_NOW",return_url:"https://fitplan-plani-im.netlify.app/premium.html?paypal=success",cancel_url:"https://fitplan-plani-im.netlify.app/premium.html?paypal=cancel"}});
