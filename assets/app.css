@@ -63,3 +63,13 @@ html[data-theme="male"] .welcomeCard{background:radial-gradient(circle at 82% 18
 html[data-theme="male"] .pinkTag{box-shadow:0 8px 24px #2477e835}
 html[data-theme="male"] .menu{border-top-color:#dcecff}
 html[data-theme="male"] .premiumTile{border-color:#dcecf8}
+
+/* Workout motion + stronger gender identity */
+.exercise{position:relative;overflow:hidden}
+.exercise .fit-img{transition:transform .35s ease;animation:fitPulse 3.2s ease-in-out infinite}
+.exercise:active .fit-img{transform:scale(1.025)}
+@keyframes fitPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.018)}}
+html[data-theme="male"] .exercise{border-top:4px solid #2477e8!important}
+html[data-theme="female"] .exercise{border-top:4px solid #ef4d88!important}
+html[data-theme="male"] .badge{background:#2477e818;border-color:#2477e855;color:#145fae}
+html[data-theme="female"] .badge{background:#ef4d8818;border-color:#ef4d8855;color:#bd356a}
