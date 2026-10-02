@@ -5,9 +5,9 @@
 <meta name="theme-color" content="#07111f"><meta name="apple-mobile-web-app-capable" content="yes">
 <title>FitPlan – Plani im</title><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="assets/app.css">
 <style>#premiumFloat{position:fixed;right:16px;bottom:92px;z-index:50;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;text-decoration:none;background:#fff;border:2px solid #f3b6d1;box-shadow:0 8px 22px #0002;font-size:24px}</style></head><body>
-<header class="top"><button id="backBtn">← Kthehu</button><b>FitPlan • Plani im</b><button id="homeBtn">🏠</button></header>
+<header class="top"><button id="backBtn">← Kthehu</button><b>FitPlan • Plani im</b><span style="display:flex;gap:6px;align-items:center"><select id="fitplanLang" aria-label="Language" style="max-width:115px;padding:7px;border-radius:10px"><option value="auto">🌐 Auto</option><option value="sq">🇦🇱 Shqip</option><option value="de">🇩🇪 Deutsch</option><option value="en">🇬🇧 English</option><option value="it">🇮🇹 Italiano</option><option value="tr">🇹🇷 Türkçe</option><option value="bs">🇧🇦 Bosanski</option><option value="ar">🇸🇦 العربية</option></select><button id="homeBtn">🏠</button></span></header>
 <main id="app"></main><a href="premium.html" id="premiumFloat" aria-label="FitPlan Premium">✨</a>
 <nav id="menu" class="menu"></nav>
-<script src="assets/app.js"></script>
+<script src="assets/i18n.js"></script><script src="assets/app.js"></script>
 <script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("./sw.js"));</script>
 </body></html>
