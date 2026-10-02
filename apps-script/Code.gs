@@ -53,6 +53,10 @@ function doPost(e){
       case "saveReminder": return FP_OK_({saved:FP_APPEND_("Reminders",d)});
       case "saveDailySummary": return FP_OK_({saved:FP_APPEND_("Daily_Summary",d)});
       case "dashboard": return FP_OK_({dashboard:FP_DASHBOARD_(FP_ID_(d))});
+      case "premiumStatus": return FP_OK_({premium:FP_PREMIUM_STATUS_(FP_ID_(d))});
+      case "paypalCreateSubscription": return FP_OK_(FP_PAYPAL_CREATE_SUBSCRIPTION_(d));
+      case "paypalVerifySubscription": return FP_OK_(FP_PAYPAL_VERIFY_SUBSCRIPTION_(d));
+      case "paypalCancelSubscription": return FP_OK_(FP_PAYPAL_CANCEL_SUBSCRIPTION_(d));
 
       // Real diet engine
       case "getDietProducts": return FP_getDietProducts();
@@ -243,4 +247,68 @@ function FP_AI_MEAL_(d){
   var answer=FP_OPENAI_({input:[{role:"user",content:[{type:"input_text",text:prompt},{type:"input_image",image_url:img}]}]});
   try{FP_APPEND_("AI_History",{profile_id:FP_ID_(d),question:"AI meal photo",answer:answer,timestamp:FP_NOW_()});}catch(_){}
   return FP_OK_({answer:answer});
+}
+
+
+/* ---------------- PREMIUM / PAYPAL SUBSCRIPTIONS ----------------
+ Script Properties (NEVER put secrets in GitHub/frontend):
+ PAYPAL_MODE=sandbox|live
+ PAYPAL_CLIENT_ID=...
+ PAYPAL_CLIENT_SECRET=...
+ PAYPAL_PLAN_MONTHLY=P-...
+ PAYPAL_PLAN_YEARLY=P-...
+ PREMIUM_TRIAL_DAYS=14
+*/
+function FP_PROP_(k){return PropertiesService.getScriptProperties().getProperty(k)||"";}
+function FP_PAYPAL_BASE_(){return FP_PROP_("PAYPAL_MODE")==="live"?"https://api-m.paypal.com":"https://api-m.sandbox.paypal.com";}
+function FP_PAYPAL_TOKEN_(){
+  var id=FP_PROP_("PAYPAL_CLIENT_ID"),sec=FP_PROP_("PAYPAL_CLIENT_SECRET");
+  if(!id||!sec) throw new Error("PayPal API credentials mungojnë në Script Properties");
+  var r=UrlFetchApp.fetch(FP_PAYPAL_BASE_()+"/v1/oauth2/token",{method:"post",headers:{Authorization:"Basic "+Utilities.base64Encode(id+":"+sec)},payload:"grant_type=client_credentials",muteHttpExceptions:true});
+  var j=JSON.parse(r.getContentText()||"{}"); if(r.getResponseCode()<200||r.getResponseCode()>299)throw new Error(j.error_description||"PayPal OAuth gabim");
+  return j.access_token;
+}
+function FP_PAYPAL_(path,method,body){
+  var o={method:method||"get",headers:{Authorization:"Bearer "+FP_PAYPAL_TOKEN_(),"Content-Type":"application/json"},muteHttpExceptions:true};
+  if(body)o.payload=JSON.stringify(body);
+  var r=UrlFetchApp.fetch(FP_PAYPAL_BASE_()+path,o),txt=r.getContentText()||"{}",j={};try{j=JSON.parse(txt)}catch(e){j={raw:txt}}
+  if(r.getResponseCode()<200||r.getResponseCode()>299)throw new Error((j.details&&j.details[0]&&j.details[0].description)||j.message||"PayPal API "+r.getResponseCode());
+  return j;
+}
+function FP_PREMIUM_SHEET_(){
+  var ss=FP_SS_(),sh=ss.getSheetByName("Premium_Subscriptions");
+  if(!sh){sh=ss.insertSheet("Premium_Subscriptions");sh.appendRow(["Timestamp","Profile ID","Subscription ID","Plan","Status","Start","Next Billing","Updated"]);}
+  return sh;
+}
+function FP_SAVE_PREMIUM_(pid,sub,plan){
+  var sh=FP_PREMIUM_SHEET_(),last=sh.getLastRow(),row=0;
+  if(last>1){var v=sh.getRange(2,2,last-1,2).getDisplayValues();for(var i=v.length-1;i>=0;i--)if(v[i][0]===pid){row=i+2;break;}}
+  var next=sub.billing_info&&sub.billing_info.next_billing_time||"",vals=[new Date(),pid,sub.id||"",plan||"",sub.status||"",sub.start_time||"",next,new Date()];
+  if(row)sh.getRange(row,1,1,vals.length).setValues([vals]);else sh.appendRow(vals);
+  return {subscription_id:sub.id||"",status:sub.status||"",plan:plan||"",next_billing_time:next};
+}
+function FP_PREMIUM_STATUS_(pid){
+  if(!pid)return {entitled:false,status:"FREE"};
+  var sh=FP_PREMIUM_SHEET_(),last=sh.getLastRow();if(last<2)return {entitled:false,status:"FREE"};
+  var v=sh.getRange(2,1,last-1,8).getValues();for(var i=v.length-1;i>=0;i--)if(String(v[i][1])===pid){var st=String(v[i][4]||"").toUpperCase();return {entitled:st==="ACTIVE"||st==="APPROVAL_PENDING",status:st||"FREE",subscription_id:v[i][2]||"",plan:v[i][3]||"",next_billing_time:v[i][6]||""};}
+  return {entitled:false,status:"FREE"};
+}
+function FP_PAYPAL_CREATE_SUBSCRIPTION_(d){
+  var pid=FP_ID_(d);if(!pid)throw new Error("Mungon profile_id");
+  var plan=String(d.plan||"monthly").toLowerCase(),planId=plan==="yearly"?FP_PROP_("PAYPAL_PLAN_YEARLY"):FP_PROP_("PAYPAL_PLAN_MONTHLY");
+  if(!planId)throw new Error("PayPal Plan ID mungon për "+plan);
+  var sub=FP_PAYPAL_("/v1/billing/subscriptions","post",{plan_id:planId,custom_id:pid,application_context:{brand_name:"FitPlan - Plani im",user_action:"SUBSCRIBE_NOW",return_url:"https://fitplan-plani-im.netlify.app/premium.html?paypal=success",cancel_url:"https://fitplan-plani-im.netlify.app/premium.html?paypal=cancel"}});
+  FP_SAVE_PREMIUM_(pid,sub,plan);var approve="";(sub.links||[]).forEach(function(x){if(x.rel==="approve")approve=x.href;});
+  return {subscription_id:sub.id,status:sub.status,approve_url:approve,plan:plan};
+}
+function FP_PAYPAL_VERIFY_SUBSCRIPTION_(d){
+  var pid=FP_ID_(d),id=String(d.subscription_id||"").trim();if(!pid||!id)throw new Error("Mungon profile_id ose subscription_id");
+  var sub=FP_PAYPAL_("/v1/billing/subscriptions/"+encodeURIComponent(id),"get");
+  if(String(sub.custom_id||"")!==pid)throw new Error("Subscription nuk i përket këtij profili");
+  return {premium:FP_SAVE_PREMIUM_(pid,sub,String(d.plan||""))};
+}
+function FP_PAYPAL_CANCEL_SUBSCRIPTION_(d){
+  var pid=FP_ID_(d),id=String(d.subscription_id||"").trim();if(!pid||!id)throw new Error("Mungon subscription_id");
+  FP_PAYPAL_("/v1/billing/subscriptions/"+encodeURIComponent(id)+"/cancel","post",{reason:"Cancelled by FitPlan user"});
+  var sub=FP_PAYPAL_("/v1/billing/subscriptions/"+encodeURIComponent(id),"get");return {premium:FP_SAVE_PREMIUM_(pid,sub,String(d.plan||""))};
 }
