@@ -68,6 +68,9 @@ function doPost(e){
       // AI
       case "ai": return FP_AI_(d);
       case "aiMeal": return FP_AI_MEAL_(d);
+      case "nutritionLookup": return FP_OK_({nutrition:FP_NUTRITION_LOOKUP_(d)});
+      case "userFeedback": return FP_OK_({saved:FP_USER_FEEDBACK_(d)});
+      case "analyticsEvent": return FP_OK_({saved:FP_ANALYTICS_EVENT_(d)});
       default: throw new Error("Action i panjohur: "+a);
     }
   }catch(err){ return FP_ERR_(err); }
@@ -213,6 +216,30 @@ function FP_almased(heightCm,grams,withOil){
 }
 function FP_TEST_DIET(){
   Logger.log(JSON.stringify({products:FP_getDietProducts(),almased:FP_almased(150,50,true)},null,2));
+}
+
+/* ---------------- NUTRITION / FEEDBACK / ANALYTICS ---------------- */
+function FP_ENSURE_SHEET_(name,headers){
+  var ss=FP_SS_(),sh=ss.getSheetByName(name);
+  if(!sh){sh=ss.insertSheet(name);sh.getRange(1,1,1,headers.length).setValues([headers]);sh.setFrozenRows(1);}
+  return sh;
+}
+function FP_USER_FEEDBACK_(d){
+  var sh=FP_ENSURE_SHEET_("User_Feedback",["Timestamp","Profile ID","Rating","Comment","Anonymous","App Version"]);
+  sh.appendRow([FP_NOW_(),FP_ID_(d),FP_NUM_(d.rating),String(d.comment||"").slice(0,2000),d.anonymous!==false,FP_VERSION]);
+  return {sheet:"User_Feedback",row:sh.getLastRow()};
+}
+function FP_ANALYTICS_EVENT_(d){
+  var sh=FP_ENSURE_SHEET_("Analytics_Events",["Timestamp","Anonymous ID","Event","Section","Value","App Version","Platform"]);
+  sh.appendRow([FP_NOW_(),String(d.anonymous_id||FP_ID_(d)||"").slice(0,80),String(d.event||"").slice(0,80),String(d.section||"").slice(0,80),String(d.value||"").slice(0,200),FP_VERSION,String(d.platform||"").slice(0,40)]);
+  return {sheet:"Analytics_Events",row:sh.getLastRow()};
+}
+function FP_NUTRITION_LOOKUP_(d){
+  var food=String(d.food||"").trim(), grams=Math.max(1,FP_NUM_(d.grams)||100);
+  if(!food)throw new Error("Mungon ushqimi");
+  var prompt="Kthe VETEM JSON valid për "+grams+" g të ushqimit: "+food+". Fushat: name,kcal,protein,carbs,fat,fiber,vitamin_a,vitamin_a_unit,vitamin_c,vitamin_c_unit,vitamin_d,vitamin_d_unit,vitamin_e,vitamin_e_unit,vitamin_k,vitamin_k_unit,calcium,iron,magnesium,potassium,zinc,source. Përdor vlera standarde ushqimore vetëm kur je i sigurt; nëse një mikronutrient nuk dihet vendos null. Mos shpik burim.";
+  var raw=FP_OPENAI_({input:prompt}),clean=String(raw||"").replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/,"");
+  var j=JSON.parse(clean);j.grams=grams;return j;
 }
 
 /* ---------------- AI ---------------- */
