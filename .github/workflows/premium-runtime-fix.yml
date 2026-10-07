@@ -1,0 +1,36 @@
+name: Premium runtime compatibility fix
+on:
+  push:
+    paths:
+      - '.github/workflows/premium-runtime-fix.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch Premium translator safely
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('assets/premium.js')
+          s=p.read_text()
+          old='day=()=>new Date().toISOString().slice(0,10);function prof()'
+          new='day=()=>new Date().toISOString().slice(0,10),TT=t=>window.FitPlanTranslate?window.FitPlanTranslate(String(t??"")):String(t??"");function prof()'
+          if old in s:
+              s=s.replace(old,new,1)
+          elif 'TT=t=>window.FitPlanTranslate?' not in s:
+              raise SystemExit('Expected Premium bootstrap marker not found')
+          p.write_text(s)
+          PY
+          node --check assets/premium.js
+          git diff --check
+      - name: Commit verified fix
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/premium.js
+          git commit -m 'Fix Premium dynamic translation runtime'
+          git push
