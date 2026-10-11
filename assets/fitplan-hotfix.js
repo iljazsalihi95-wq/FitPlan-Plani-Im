@@ -1,30 +1,8 @@
-(()=>{
-'use strict';
-const FALLBACK='images/ushtrimet.png';
-function fixImages(root=document){
-  root.querySelectorAll('img.fit-img').forEach(img=>{
-    img.referrerPolicy='no-referrer';
-    img.decoding='async';
-    img.addEventListener('error',()=>{
-      if(img.dataset.fallbackDone)return;
-      img.dataset.fallbackDone='1';
-      img.src=FALLBACK;
-      img.alt=(img.alt||'Ushtrim')+' – pamje rezervë';
-    },{once:true});
-  });
-}
-function fixAI(root=document){
-  root.querySelectorAll('button,label,a,div').forEach(el=>{
-    const t=(el.textContent||'').trim().toLowerCase();
-    if((t==='ai load files'||t==='load files'||t==='ngarko fajlet'||t==='ngarko skedarët') && !el.querySelector('#mealPhoto')) el.style.display='none';
-  });
-  const out=root.querySelector('#aiA');
-  if(out){out.style.whiteSpace='pre-wrap';out.style.lineHeight='1.6';out.style.minHeight='72px';}
-  const q=root.querySelector('#aiQ');
-  if(q){q.placeholder='Pyet për dietën, gjizën, kaloritë, ushtrimet ose progresin tënd…';q.autocomplete='off';}
-}
-function polish(root=document){fixImages(root);fixAI(root)}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>polish(),{once:true});else polish();
-new MutationObserver(()=>polish()).observe(document.documentElement,{childList:true,subtree:true});
-window.addEventListener('error',e=>{const x=e.target;if(x&&x.tagName==='IMG'&&x.classList.contains('fit-img')){if(!x.dataset.fallbackDone){x.dataset.fallbackDone='1';x.src=FALLBACK}}},true);
-})();
+(()=>{'use strict';
+const FALLBACK='images/ushtrimet.png',API='https://script.google.com/macros/s/AKfycbw_W0WFXv-ccDZs4XCoQALqeRwCa7A7W3dsbyyAbWDtoo2pXDbpDab86gwtaZyrDSb3/exec';
+function fixImages(root=document){root.querySelectorAll('img.fit-img').forEach(img=>{img.referrerPolicy='no-referrer';img.decoding='async';img.addEventListener('error',()=>{if(img.dataset.fallbackDone)return;img.dataset.fallbackDone='1';img.src=FALLBACK},{once:true})})}
+function fixAI(root=document){root.querySelectorAll('button,label,a,div').forEach(el=>{const t=(el.textContent||'').trim().toLowerCase();if((t==='ai load files'||t==='load files'||t==='ngarko fajlet'||t==='ngarko skedarët')&&!el.querySelector('#mealPhoto'))el.style.display='none'});const out=root.querySelector('#aiA');if(out){out.style.whiteSpace='pre-wrap';out.style.lineHeight='1.6'}const q=root.querySelector('#aiQ');if(q)q.placeholder='Pyet për dietën, ushtrimet ose progresin tënd…'}
+function photo(file){return new Promise((ok,no)=>{if(!file||!file.type.startsWith('image/'))return no(Error('Zgjidh një fotografi.'));const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,1200/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',.8))};im.src=r.result};r.readAsDataURL(file)})}
+function html(){let a=localStorage.getItem('fitplan_photo_before')||'',b=localStorage.getItem('fitplan_photo_after')||'',x=localStorage.getItem('fitplan_photo_comparison_ai')||'';return `<section id="fpCompare" class="card fpCompare"><h2>📸 Krahasimi PARA / TANI</h2><p class="muted">Fotot e tua shfaqen krah për krah. Pasi t'i ngarkosh të dyja, AI bën krahasimin vizual.</p><div class="fpCompareGrid"><div class="fpPhotoBox"><b>PARA</b>${a?`<img src="${a}" alt="Foto para">`:'<div class="fpEmpty">Pa foto</div>'}<label class="photoUpload">📷 ${a?'Ndrysho':'Ngarko'} PARA<input id="fpBefore" type="file" accept="image/*" hidden></label></div><div class="fpPhotoBox"><b>TANI</b>${b?`<img src="${b}" alt="Foto tani">`:'<div class="fpEmpty">Pa foto</div>'}<label class="photoUpload">📷 ${b?'Ndrysho':'Ngarko'} TANI<input id="fpAfter" type="file" accept="image/*" hidden></label></div></div><div class="fpCompareActions"><button id="fpAI" class="primary" ${(!a||!b)?'disabled':''}>🤖 Krahaso me AI</button><button id="fpClear" class="secondary">Pastro</button></div><div id="fpMsg" class="muted"></div><div id="fpResult" class="fpCompareResult">${x?'<b>Analiza e fundit</b><br>'+x.replace(/</g,'&lt;').replace(/\n/g,'<br>'):''}</div></section>`}
+function mount(){const app=document.getElementById('app');if(!app||document.getElementById('fpCompare'))return;let t=(app.querySelector('.hero h1')?.textContent||'').toLowerCase();if(!/progres|progress/.test(t))return;app.insertAdjacentHTML('beforeend',html());let msg=document.getElementById('fpMsg');async function save(inp,key){try{msg.textContent='Po ruhet…';localStorage.setItem(key,await photo(inp.files[0]));document.getElementById('fpCompare').remove();mount()}catch(e){msg.textContent=e.message}}document.getElementById('fpBefore').onchange=e=>save(e.target,'fitplan_photo_before');document.getElementById('fpAfter').onchange=e=>save(e.target,'fitplan_photo_after');document.getElementById('fpClear').onclick=()=>{['fitplan_photo_before','fitplan_photo_after','fitplan_photo_comparison_ai'].forEach(k=>localStorage.removeItem(k));document.getElementById('fpCompare').remove();mount()};let btn=document.getElementById('fpAI');if(btn)btn.onclick=async()=>{btn.disabled=true;msg.textContent='AI po krahason fotot…';try{let body={action:'aiComparePhotos',profile_id:localStorage.getItem('fitplan_profile_id')||'',before_image:localStorage.getItem('fitplan_photo_before'),after_image:localStorage.getItem('fitplan_photo_after')};let r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)}),j=await r.json();if(!j.ok)throw Error(j.error||'Analiza nuk u krye');let ans=j.answer||'Pa rezultat.';localStorage.setItem('fitplan_photo_comparison_ai',ans);document.getElementById('fpResult').innerHTML='<b>Analiza AI</b><br>'+String(ans).replace(/</g,'&lt;').replace(/\n/g,'<br>');msg.textContent='Krahasimi u krye ✓'}catch(e){msg.textContent='Krahasimi AI: '+e.message}finally{btn.disabled=false}}}
+function polish(){fixImages();fixAI();mount()}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',polish,{once:true});else polish();new MutationObserver(polish).observe(document.documentElement,{childList:true,subtree:true});})();
